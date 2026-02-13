@@ -38,7 +38,7 @@ EMAIL_REPORT="seu-email@dominio.com.br"
 WHITELIST_EMAILS="root@dominio.com.br dev@dominio.com.br"
 ```
 
-3. Execução
+**3. Execução**
 
 Rode o script como root para garantir acesso a todos os diretórios de usuários:
 
