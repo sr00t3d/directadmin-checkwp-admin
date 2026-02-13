@@ -25,7 +25,7 @@ Ideal para identificar contas administrativas suspeitas, esquecidas ou criadas p
 **1. Download do Script**
 
 ```bash
-wget https://raw.githubusercontent.com/sr00t3d/src/main/directadmin/wordpress/checkwpadmin/checkwpadmin.sh
+wget https://raw.githubusercontent.com/sr00t3d/directadmin-checkwp-admin/refs/heads/main/checkwpadmin.sh
 chmod +x checkwpadmin.sh
 ```
 **2. Configuração (Opcional)**
