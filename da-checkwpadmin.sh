@@ -1,111 +1,158 @@
 #!/bin/bash
+################################################################################
+#                                                                              #
+#   PROJECT: WordPress Admin Auditor (DirectAdmin)                             #
+#   VERSION: 2.0.1                                                             #
+#                                                                              #
+#   AUTHOR:  Percio Andrade                                                    #
+#   CONTACT: percio@evolya.com.br | contato@perciocastelo.com.br               #
+#   WEB:     https://perciocastelo.com.br                                      #
+#                                                                              #
+#   INFO:                                                                      #
+#   Audit WP admins, filter by whitelist, generate CSV and email report.       #
+#                                                                              #
+################################################################################
 
-# --- CONFIGURAÇÕES ---
-EMAIL_DESTINO="email@dominio.com.br"
-# Adicione os e-mails permitidos separados por ESPAÇO.
-# Exemplo: "email1@dominio.com email2@dominio.com"
+# --- SETTINGS ---
+RECIPIENT_MAIL="email@dominio.com.br"
+
+# Add allowed emails separated by SPACE.
 WHITELIST_EMAILS="root@dominio.com.br dev@dominio.com.br" 
 
-ARQUIVO_CSV="relatorio_admins_wp_$(date +%Y%m%d).csv"
-# ---------------------
-
+CSV_FILE="status_admins_wp_$(date +%Y%m%d).csv"
 WP_BIN=$(which wp)
+# --------------------------------
 
-# Cabeçalho do CSV: Dominio, Quantidade de Admins (fora da allowlist), Lista de Usuários
-echo "Dominio,Qtd_Admins,Lista_Usuarios" > "$ARQUIVO_CSV"
+# Detect System Language
+SYSTEM_LANG="${LANG:0:2}"
 
-# Conta total de pastas para a barra de progresso
+if [[ "$SYSTEM_LANG" == "pt" ]]; then
+    # Portuguese
+    MSG_START="Iniciando auditoria inteligente em"
+    MSG_ACCOUNTS="contas"
+    MSG_IGNORE="Ignorando admins listados na Whitelist..."
+    MSG_PROC="Processando"
+    MSG_DONE="Processo Concluído"
+    MSG_SAVED="Relatório salvo em"
+    MSG_SENDING="Enviando relatório para"
+    MSG_SENT_OK="E-mail enviado com sucesso!"
+    MSG_SENT_FAIL="Falha ao enviar o e-mail."
+    MSG_ERR_MAIL="ATENÇÃO: Comando 'mail' não encontrado. Instale 'mailx' ou 'postfix'."
+    
+    # CSV Headers & Email Content
+    CSV_HEAD="Dominio,Qtd_Admins,Lista_Usuarios"
+    MAIL_SUBJ="Relatório de Auditoria WP - Admins Suspeitos - $(hostname)"
+    MAIL_BODY="Segue em anexo relatório de sites contendo administradores que NÃO estão na whitelist"
+else
+    # English (Default)
+    MSG_START="Starting smart audit on"
+    MSG_ACCOUNTS="accounts"
+    MSG_IGNORE="Ignoring admins listed in Whitelist..."
+    MSG_PROC="Processing"
+    MSG_DONE="Process Completed"
+    MSG_SAVED="Report saved to"
+    MSG_SENDING="Sending report to"
+    MSG_SENT_OK="Email sent successfully!"
+    MSG_SENT_FAIL="Failed to send email."
+    MSG_ERR_MAIL="WARNING: 'mail' command not found. Please install 'mailx' or 'postfix'."
+    
+    # CSV Headers & Email Content
+    CSV_HEAD="Domain,Admin_Count,User_List"
+    MAIL_SUBJ="WP Audit Report - Suspicious Admins - $(hostname)"
+    MAIL_BODY="Attached is the report of sites containing administrators NOT in the whitelist"
+fi
+
+# Write CSV Header
+echo "$CSV_HEAD" > "$CSV_FILE"
+
+# Count total folders for progress bar
 TOTAL=$(find /home -maxdepth 1 -type d | wc -l)
 TOTAL=$((TOTAL - 1))
 CURRENT=0
 
-echo "Iniciando auditoria inteligente em $TOTAL contas..."
-echo "Ignorando admins listados na Whitelist..."
+echo "$MSG_START $TOTAL $MSG_ACCOUNTS..."
+echo "$MSG_IGNORE"
 echo "----------------------------------------------------------------"
 
 for user_dir in /home/*; do
     ((CURRENT++))
     user=$(basename "$user_dir")
-    wp_path="${user_dir}/public_html" # Ajuste se o caminho for diferente (ex: domains/domain/public_html)
+    wp_path="${user_dir}/public_html" 
+    # Adjustment for DirectAdmin standard structure if needed:
+    # wp_path="${user_dir}/domains/${user}/public_html"
     
-    # Barra de progresso visual
+    # Visual Progress Bar
     if [ "$TOTAL" -gt 0 ]; then
         PERCENT=$(( (CURRENT * 100) / TOTAL ))
     else
         PERCENT=0
     fi
-    printf "\r[%-3d%%] Processando: %-25s" "$PERCENT" "$user"
+    printf "\r[%-3d%%] %s: %-25s" "$PERCENT" "$MSG_PROC" "$user"
 
-    # Verifica se é WordPress válido (tem pasta e config)
+    # Check valid WordPress
     if [ -d "$wp_path" ] && [ -f "$wp_path/wp-config.php" ]; then
         
-        # Tenta resgatar domínio principal do user.conf do DirectAdmin
-        # Se falhar, usa o nome do usuário como fallback
+        # Try to get main domain from DirectAdmin user.conf
         if [ -f "/usr/local/directadmin/data/users/$user/user.conf" ]; then
             domain=$(grep "domain=" /usr/local/directadmin/data/users/"$user"/user.conf 2>/dev/null | cut -d= -f2 | head -n1)
         fi
         [ -z "$domain" ] && domain=$user
 
-        # Obtém lista bruta de admins (Login e Email) via WP-CLI
-        # --skip-plugins/themes previne erros fatais de PHP
+        # Get raw admin list via WP-CLI
         RAW_DATA=$(sudo -u "$user" -- "$WP_BIN" user list --role=administrator --fields=user_login,user_email --format=csv --skip-plugins --skip-themes --path="$wp_path" 2>/dev/null)
 
-        # Variáveis de controle para este site
-        CONTAGEM=0
-        LISTA_ADMINS=""
+        COUNTER=0
+        ADMIN_LIST=""
 
-        # Lê a saída linha por linha
         if [ -n "$RAW_DATA" ]; then
-            # 'tail -n +2' remove o cabeçalho do CSV gerado pelo WP-CLI
+            # 'tail -n +2' removes WP-CLI CSV header
             while IFS=, read -r login email; do
-                # Limpeza de caracteres invisíveis
+                # Clean invisible chars
                 login=$(echo "$login" | tr -d '\r')
                 email=$(echo "$email" | tr -d '\r')
 
-                # --- LÓGICA DE WHITELIST DINÂMICA ---
-                # Verifica se o e-mail atual NÃO está contido na string WHITELIST_EMAILS
-                # Os espaços extras " $var " garantem que não pegue substrings parciais indesejadas
+                # --- DYNAMIC WHITELIST LOGIC ---
+                # Checks if current email is NOT in WHITELIST_EMAILS
                 if [[ ! " $WHITELIST_EMAILS " =~ " $email " ]]; then
                     
-                    ((CONTAGEM++))
+                    ((COUNTER++))
                     
-                    # Formata a string de saída
-                    if [ -z "$LISTA_ADMINS" ]; then
-                        LISTA_ADMINS="$login ($email)"
+                    if [ -z "$ADMIN_LIST" ]; then
+                        ADMIN_LIST="$login ($email)"
                     else
-                        LISTA_ADMINS="$LISTA_ADMINS; $login ($email)"
+                        ADMIN_LIST="$ADMIN_LIST; $login ($email)"
                     fi
                 fi
-                # ------------------------------------
+                # -------------------------------
 
             done <<< "$(echo "$RAW_DATA" | tail -n +2)"
         fi
 
-        # Só grava no relatório se houver admins suspeitos
-        if [ "$CONTAGEM" -gt 0 ]; then
-            echo "$domain,$CONTAGEM,\"$LISTA_ADMINS\"" >> "$ARQUIVO_CSV"
+        # Write to CSV if suspicious admins found
+        if [ "$COUNTER" -gt 0 ]; then
+            echo "$domain,$COUNTER,\"$ADMIN_LIST\"" >> "$CSV_FILE"
         fi
     fi
 done
 
-echo -e "\n\n--- Processo Concluído ---"
-echo "Relatório salvo em: $ARQUIVO_CSV"
+echo -e "\n\n--- $MSG_DONE ---"
+echo "$MSG_SAVED: $CSV_FILE"
 
-# Rotina de Envio de E-mail
+# Email Routine
 if command -v mail &> /dev/null; then
-    echo "Enviando relatório para $EMAIL_DESTINO..."
+    echo "$MSG_SENDING $RECIPIENT_MAIL..."
     
-    SUBJECT="Relatório de Auditoria WP - Admins Suspeitos - $(hostname)"
-    BODY="Segue em anexo relatório de sites contendo administradores que NÃO estão na whitelist ($WHITELIST_EMAILS)."
+    FINAL_BODY="$MAIL_BODY ($WHITELIST_EMAILS)."
     
-    # Envia com anexo (-a)
-    echo "$BODY" | mail -s "$SUBJECT" -a "$ARQUIVO_CSV" "$EMAIL_DESTINO"
+    # Send with attachment (-a)
+    # Note: 'mailx' uses -a, some 'mail' versions might use -A. 
+    echo "$FINAL_BODY" | mail -s "$MAIL_SUBJ" -a "$CSV_FILE" "$RECIPIENT_MAIL"
     
     if [ $? -eq 0 ]; then
-        echo "E-mail enviado com sucesso!"
+        echo "$MSG_SENT_OK"
     else
-        echo "Falha ao enviar o e-mail."
+        echo "$MSG_SENT_FAIL"
     fi
 else
-    echo "ATENÇÃO: Comando 'mail' não encontrado. Instale o pacote mailx ou postfix."
+    echo "$MSG_ERR_MAIL"
 fi
