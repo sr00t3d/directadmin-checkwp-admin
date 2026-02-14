@@ -30,8 +30,8 @@ Ideal for identifying suspicious, forgotten administrative accounts or accounts 
 **1. Script Download**
 
 ```bash
-wget https://raw.githubusercontent.com/sr00t3d/directadmin-checkwp-admin/refs/heads/main/checkwpadmin.sh
-chmod +x checkwpadmin.sh
+wget https://raw.githubusercontent.com/sr00t3d/directadmin-checkwp-admin/refs/heads/main/da-checkwpadmin.sh
+chmod +x da-checkwpadmin.sh
 ```
 **2. Configuration (Optional)**
 
@@ -48,7 +48,7 @@ WHITELIST_EMAILS="root@domain.com.br dev@domain.com.br"
 Run the script as root to ensure access to all user directories:
 
 ```bash
-./checkwpadmin.sh
+./da-checkwpadmin.sh
 ```
 
 ## 📊 Report Structure (CSV)
@@ -56,9 +56,8 @@ Run the script as root to ensure access to all user directories:
 The generated file (`relatorio_admins_wp.csv`) follows the pattern:
 
 ```
-Date,DirectAdmin User,Domain,Qty. External Admins,Found Logins
-2026-02-13,client01,site.com,1,hidden_admin
-2026-02-13,client02,https://www.google.com/search?q=loja.com,0,(empty)
+DOMAIN    COUNTER    ADMIN_LIST
+site.com  4          hacked1  noobmaster3  lolhehehe  igotyoursite
 ```
 
 ## ⚠️ Error Handling
@@ -66,3 +65,13 @@ Date,DirectAdmin User,Domain,Qty. External Admins,Found Logins
 - The script was designed to **not interrupt** execution if it encounters a broken site. It:
 - Ignores PHP errors from the site (via WP-CLI flags).
 - Records "Error reading WP" in the report if wp-config.php is unreadable or the database is inaccessible.
+
+## 📚 Detailed Tutorial
+
+For a complete step-by-step guide on how to import the generated files into Thunderbird and troubleshoot common migration issues, check out my full article:
+
+👉 [**Mass Check Admins in WordPress on DirectAdmin**](https://perciocastelo.com.br/blog/mass-check-admins-in-wordPress-on-directAdmin.html)
+
+## License 📄
+
+This project is licensed under the **GNU General Public License v3.0**. See the [LICENSE](LICENSE) file for details.
