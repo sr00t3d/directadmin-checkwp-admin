@@ -66,6 +66,11 @@ site.com  4          hacked1  noobmaster3  lolhehehe  igotyoursite
 - Ignores PHP errors from the site (via WP-CLI flags).
 - Records "Error reading WP" in the report if wp-config.php is unreadable or the database is inaccessible.
 
+## ⚠️ Disclaimer
+
+> [!WARNING]
+> This software is provided "as-is". While extensively tested in DirectAdmin and WordPress environments. The author is not responsible for any data loss.
+
 ## 📚 Detailed Tutorial
 
 For a complete step-by-step guide on how to import the generated files into Thunderbird and troubleshoot common migration issues, check out my full article:
