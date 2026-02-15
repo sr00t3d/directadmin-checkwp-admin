@@ -73,7 +73,7 @@ site.com  4          hacked1  noobmaster3  lolhehehe  igotyoursite
 
 ## 📚 Tutorial Detalhado
 
-Para um guia completo passo a passo sobre como importar os arquivos gerados para o Thunderbird e solucionar problemas comuns de migração, confira meu artigo completo:
+Para um guia completo passo a passo, confira meu artigo completo:
 
 👉 [**Verificação em Massa de Admins no WordPress no DirectAdmin**](https://perciocastelo.com.br/blog/mass-check-admins-in-wordPress-on-directAdmin.html)
 
