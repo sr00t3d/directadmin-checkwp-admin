@@ -73,7 +73,7 @@ site.com  4          hacked1  noobmaster3  lolhehehe  igotyoursite
 
 ## 📚 Detailed Tutorial
 
-For a complete step-by-step guide on how to import the generated files into Thunderbird and troubleshoot common migration issues, check out my full article:
+For a complete step-by-step guide, check out my full article:
 
 👉 [**Mass Check Admins in WordPress on DirectAdmin**](https://perciocastelo.com.br/blog/mass-check-admins-in-wordPress-on-directAdmin.html)
 
