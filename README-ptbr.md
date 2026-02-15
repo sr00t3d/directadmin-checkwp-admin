@@ -69,7 +69,7 @@ site.com  4          hacked1  noobmaster3  lolhehehe  igotyoursite
 ## ⚠️ Aviso Legal
 
 > [!WARNING]
-> Este software é fornecido "como está". Embora extensivamente testado em ambientes DirectAdmin e WordPress, o autor não se responsabiliza por qualquer perda de dados.
+> Este software é fornecido "como está". Certifique-se sempre de testar primeiro em um ambiente de desenvolvimento. O autor não se responsabiliza por qualquer uso indevido, consequências legais ou impacto em dados causado por esta ferramenta.
 
 ## 📚 Tutorial Detalhado
 
