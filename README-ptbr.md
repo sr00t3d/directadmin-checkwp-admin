@@ -1,6 +1,6 @@
 # 🚀 DirectAdmin Check WP-Admin
 
-Readme: [Português](README-ptbr.md)
+Readme: [English](README-ptbr.md)
 
 ![Licença](https://img.shields.io/github/license/sr00t3d/directadmin-checkwp-admin)
 ![Script Shell](https://img.shields.io/badge/shell-script-green)
