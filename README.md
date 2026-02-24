@@ -5,20 +5,30 @@ Readme: [Português](README-ptbr.md)
 ![License](https://img.shields.io/github/license/sr00t3d/directadmin-checkwp-admin)
 ![Shell Script](https://img.shields.io/badge/shell-script-green)
 
-checkwpadmin.sh is a security auditing tool developed for DirectAdmin servers. Its critical objective is to scan all user accounts, identify WordPress installations, and list users with Administrator privileges who are not part of the team whitelist (e.g.: root@domain or dev@domain).
+`da-checkwpadmin.sh` is a security auditing tool developed for DirectAdmin
+servers. Its critical objective is to scan all user accounts, identify
+WordPress installations, and list users with Administrator privileges who are
+not part of the team whitelist (for example:
+`root@dominio.com.br` or `dev@dominio.com.br`).
 
 Ideal for identifying suspicious, forgotten administrative accounts or accounts created by attackers on shared servers.
 
 🚀 Main Features
 
-- **Global Scan**: Automatically iterates through all DirectAdmin users (`/home/*/domains/*/public_html`).
+- **Global Scan**: Automatically iterates through all DirectAdmin users
+  (`/home/*`), checking WordPress installs in `/home/<user>/public_html`.
 - **WordPress Detection**: Validates whether the directory contains an active WP installation.
 - **Admin Audit (WP-CLI)**: Uses wp user list to extract users with the administrator role.
 - **Security Mode**: Executes commands with --skip-plugins and --skip-themes to ensure the audit works even on sites with fatal errors or conflicts.
 - **Smart Whitelist**: Ignores default infrastructure administrative users (e.g.: *`@domain.com.br`), focusing only on unknown users.
-- **CSV Report**: Generates a consolidated `.csv` file with: `Date`, `DA User`, `Domain`, `Total Suspicious Admins`, `Login List`.
+- **Daily CSV report**: Generates a consolidated file in
+  `status_admins_wp_YYYYMMDD.csv` format.
 - **Visual Feedback**: Displays a progress bar during execution in the terminal.
 - **Email Alert**: Automatically sends the final report to the configured email.
+- **Execution audit log**: Registers audit start/end time, generated file, and
+  email delivery status in `/var/log/wp_audit.log`.
+- **PT/EN messages**: Automatically adjusts terminal messages and email content
+  based on `LANG`.
 
 🛠️ Prerequisites
 - Server with **DirectAdmin** and **root** access.
@@ -35,12 +45,14 @@ chmod +x da-checkwpadmin.sh
 ```
 **2. Configuration (Optional)**
 
-Edit the script header to adjust the email whitelist or the report recipient:
+Edit the script header to adjust recipient, whitelist, and audit options:
 
 ```bash
 # Example of internal variables
-EMAIL_REPORT="your-email@domain.com.br"
+RECIPIENT_MAIL="your-email@domain.com.br"
 WHITELIST_EMAILS="root@domain.com.br dev@domain.com.br"
+CSV_FILE="status_admins_wp_$(date +%Y%m%d).csv"
+LOG_FILE="/var/log/wp_audit.log"
 ```
 
 **3. Execution**
@@ -53,12 +65,22 @@ Run the script as root to ensure access to all user directories:
 
 ## 📊 Report Structure (CSV)
 
-The generated file (`relatorio_admins_wp.csv`) follows the pattern:
+The generated file (`status_admins_wp_YYYYMMDD.csv`) follows the pattern:
 
 ```
 DOMAIN    COUNTER    ADMIN_LIST
 site.com  4          hacked1  noobmaster3  lolhehehe  igotyoursite
 ```
+
+## 🧾 Audit trail
+
+In addition to the CSV, the script writes an execution history to
+`/var/log/wp_audit.log` including:
+
+- Audit start date/time.
+- Audit end date/time.
+- Generated CSV filename.
+- Email result (success, failure, or missing `mail` command).
 
 ## ⚠️ Error Handling
 

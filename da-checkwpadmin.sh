@@ -2,14 +2,15 @@
 ################################################################################
 #                                                                              #
 #   PROJECT: WordPress Admin Auditor (DirectAdmin)                             #
-#   VERSION: 2.0.1                                                             #
+#   VERSION: 2.1.1 (Com Auditoria de Execução e Idiomas)                       #
 #                                                                              #
 #   AUTHOR:  Percio Andrade                                                    #
 #   CONTACT: percio@evolya.com.br | contato@perciocastelo.com.br               #
 #   WEB:     https://perciocastelo.com.br                                      #
 #                                                                              #
 #   INFO:                                                                      #
-#   Audit WP admins, filter by whitelist, generate CSV and email report.       #
+#   Audit WP admins, filter by whitelist, generate CSV, email report           #
+#   and log execution history to /var/log/wp_audit.log.                        #
 #                                                                              #
 ################################################################################
 
@@ -21,7 +22,12 @@ WHITELIST_EMAILS="root@dominio.com.br dev@dominio.com.br"
 
 CSV_FILE="status_admins_wp_$(date +%Y%m%d).csv"
 WP_BIN=$(which wp)
+LOG_FILE="/var/log/wp_audit.log"
 # --------------------------------
+
+# Capture Start Time
+START_DATE=$(date +"%d-%m-%y")
+START_TIME=$(date +"%H:%M:%S")
 
 # Detect System Language
 SYSTEM_LANG="${LANG:0:2}"
@@ -38,6 +44,15 @@ if [[ "$SYSTEM_LANG" == "pt" ]]; then
     MSG_SENT_OK="E-mail enviado com sucesso!"
     MSG_SENT_FAIL="Falha ao enviar o e-mail."
     MSG_ERR_MAIL="ATENÇÃO: Comando 'mail' não encontrado. Instale 'mailx' ou 'postfix'."
+    
+    # Audit Logs (PT)
+    LOG_START="Relatório de auditoria iniciado em $START_DATE no horário de $START_TIME"
+    LOG_END_P1="Relatório finalizado em"
+    LOG_END_P2="no horário de"
+    LOG_END_P3="Arquivo de relatório gerado em"
+    LOG_MAIL_OK="e email enviado para"
+    LOG_MAIL_FAIL="mas falhou ao enviar email para"
+    LOG_MAIL_ERR="e email não enviado (comando mail ausente)"
     
     # CSV Headers & Email Content
     CSV_HEAD="Dominio,Qtd_Admins,Lista_Usuarios"
@@ -56,11 +71,23 @@ else
     MSG_SENT_FAIL="Failed to send email."
     MSG_ERR_MAIL="WARNING: 'mail' command not found. Please install 'mailx' or 'postfix'."
     
+    # Audit Logs (EN)
+    LOG_START="Audit report started on $START_DATE at $START_TIME"
+    LOG_END_P1="Audit report finished on"
+    LOG_END_P2="at"
+    LOG_END_P3="Report file generated at"
+    LOG_MAIL_OK="and email sent to"
+    LOG_MAIL_FAIL="but failed to send email to"
+    LOG_MAIL_ERR="and email not sent (mail command missing)"
+    
     # CSV Headers & Email Content
     CSV_HEAD="Domain,Admin_Count,User_List"
     MAIL_SUBJ="WP Audit Report - Suspicious Admins - $(hostname)"
     MAIL_BODY="Attached is the report of sites containing administrators NOT in the whitelist"
 fi
+
+# Write Start Log to /var/log/wp_audit.log
+echo "$LOG_START" >> "$LOG_FILE"
 
 # Write CSV Header
 echo "$CSV_HEAD" > "$CSV_FILE"
@@ -138,21 +165,34 @@ done
 echo -e "\n\n--- $MSG_DONE ---"
 echo "$MSG_SAVED: $CSV_FILE"
 
-# Email Routine
+# Capture End Time
+END_DATE=$(date +"%d-%m-%y")
+END_TIME=$(date +"%H:%M:%S")
+
+# Email Routine and End Log
 if command -v mail &> /dev/null; then
     echo "$MSG_SENDING $RECIPIENT_MAIL..."
     
     FINAL_BODY="$MAIL_BODY ($WHITELIST_EMAILS)."
     
     # Send with attachment (-a)
-    # Note: 'mailx' uses -a, some 'mail' versions might use -A. 
     echo "$FINAL_BODY" | mail -s "$MAIL_SUBJ" -a "$CSV_FILE" "$RECIPIENT_MAIL"
     
     if [ $? -eq 0 ]; then
         echo "$MSG_SENT_OK"
+        LOG_MAIL_STATUS="$LOG_MAIL_OK $RECIPIENT_MAIL"
     else
         echo "$MSG_SENT_FAIL"
+        LOG_MAIL_STATUS="$LOG_MAIL_FAIL $RECIPIENT_MAIL"
     fi
 else
     echo "$MSG_ERR_MAIL"
+    LOG_MAIL_STATUS="$LOG_MAIL_ERR"
 fi
+
+# Write End Log to /var/log/wp_audit.log
+LOG_END="$LOG_END_P1 $END_DATE $LOG_END_P2 $END_TIME: $LOG_END_P3 $CSV_FILE $LOG_MAIL_STATUS"
+
+echo "$LOG_END" >> "$LOG_FILE"
+# Separator for the log file
+echo "--------------------------------------------------------------------------------" >> "$LOG_FILE"
