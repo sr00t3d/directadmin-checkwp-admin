@@ -5,6 +5,8 @@ Readme: [English](README.md)
 ![Licença](https://img.shields.io/github/license/sr00t3d/directadmin-checkwp-admin)
 ![Script Shell](https://img.shields.io/badge/shell-script-green)
 
+<img width="700" src="directadmin-checkwp-admin-cover.webp" />
+
 `da-checkwpadmin.sh` é uma ferramenta de auditoria de segurança desenvolvida
 para servidores DirectAdmin. Seu objetivo crítico é varrer todas as contas de
 usuários, identificar instalações WordPress e listar usuários com privilégios
