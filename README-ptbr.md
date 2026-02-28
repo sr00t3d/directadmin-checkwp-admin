@@ -1,6 +1,6 @@
 # 🚀 DirectAdmin Check WP-Admin
 
-Readme: [English](README.md)
+Readme: [EN](README.md)
 
 ![Licença](https://img.shields.io/github/license/sr00t3d/directadmin-checkwp-admin)
 ![Script Shell](https://img.shields.io/badge/shell-script-green)
@@ -94,11 +94,11 @@ Além do CSV, o script grava histórico em `/var/log/wp_audit.log` com:
 ## ⚠️ Aviso Legal
 
 > [!WARNING]
-> Este software é fornecido "como está". Certifique-se sempre de testar primeiro em um ambiente de desenvolvimento. O autor não se responsabiliza por qualquer uso indevido, consequências legais ou impacto em dados causado por esta ferramenta.
+> Este software é fornecido "tal como está". Certifique-se sempre de ter permissão explícita antes de executar. O autor não se responsabiliza por qualquer uso indevido, consequências legais ou impacto nos dados causados ​​por esta ferramenta.
 
-## 📚 Tutorial Detalhado
+## 📚 Detailed Tutorial
 
-Para um guia completo passo a passo, confira meu artigo completo:
+Para um guia completo, passo a passo, confira meu artigo completo:
 
 👉 [**Verificação em Massa de Admins no WordPress no DirectAdmin**](https://perciocastelo.com.br/blog/mass-check-admins-in-wordPress-on-directAdmin.html)
 
